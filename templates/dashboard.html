@@ -4,203 +4,96 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIG - Sistema Integrado</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', sans-serif;
-        }
-
-        body {
-            display: flex;
-            min-height: 100vh;
-            background: #f5f7fa;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: 250px;
-            background: #2c3e50;
-            color: white;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Cabeçalho do Sidebar */
-        .sidebar-header {
-            padding: 25px 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            text-align: center;
-        }
-
-        .system-name {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 20px;
-            color: #3498db;
-        }
-
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .user-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid #3498db;
-        }
-
-        .user-info {
-            text-align: left;
-        }
-
-        .user-name {
-            font-weight: 600;
-            font-size: 16px;
-        }
-
-        .user-role {
-            font-size: 12px;
-            opacity: 0.8;
-        }
-
-        /* Menu de Navegação */
-        .nav-menu {
-            flex: 1;
-            padding: 20px 0;
-            overflow-y: auto;
-        }
-
-        .menu-item {
-            padding: 15px 25px;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            border-left: 4px solid transparent;
-        }
-
-        .menu-item:hover {
-            background: #34495e;
-        }
-
-        .menu-item.active {
-            background: #34495e;
-            border-left: 4px solid #3498db;
-        }
-
-        .menu-item i {
-            margin-right: 10px;
-            width: 20px;
-            text-align: center;
-        }
-
-        /* Conteúdo Principal */
-        .main-content {
-            flex: 1;
-            padding: 30px;
-        }
-
-        .content-section {
-            display: none;
-            animation: fadeIn 0.5s;
-        }
-
-        .content-section.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        /* Estilos dos Cards */
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-    </style>
 </head>
 <body>
-    <!-- Menu Lateral -->
-    <div class="sidebar">
-        <!-- Cabeçalho com SIG e usuário -->
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
         <div class="sidebar-header">
-            <div class="system-name">SIG</div>
-            <div class="user-profile">
-                <img src="https://via.placeholder.com/50" alt="Usuário" class="user-avatar">
-                <div class="user-info">
-                    <div class="user-name">Carlos Silva</div>
-                    <div class="user-role">Administrador</div>
+            <h2>SIG</h2>
+            <div class="user-info">
+                <div class="user-name">Carlos Silva</div>
+                <div class="user-role">Administrador</div>
+            </div>
+        </div>
+
+        <nav class="nav-menu">
+            <a class="menu-item active" data-target="dashboard">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+            <a class="menu-item" data-target="clientes">
+                <i class="fas fa-users"></i> Clientes
+            </a>
+            <a class="menu-item" data-target="vendas">
+                <i class="fas fa-chart-line"></i> Vendas
+            </a>
+            <a class="menu-item" data-target="produtos">
+                <i class="fas fa-box-open"></i> Produtos
+            </a>
+            <a class="menu-item" data-target="config">
+                <i class="fas fa-cog"></i> Configurações
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Conteúdo Principal -->
+    <main class="main-content">
+        <!-- Cabeçalho -->
+        <div class="content-header">
+            <h1><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
+        </div>
+
+        <!-- Seção de conteúdo -->
+        <section id="dashboard" class="content-section active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <i class="fas fa-users stat-icon"></i>
+                    <span class="stat-number">120</span>
+                    <span class="stat-label">Clientes</span>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-box stat-icon"></i>
+                    <span class="stat-number">85</span>
+                    <span class="stat-label">Produtos</span>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-dollar-sign stat-icon"></i>
+                    <span class="stat-number">R$ 45k</span>
+                    <span class="stat-label">Vendas</span>
                 </div>
             </div>
-        </div>
 
-        <!-- Menu de Navegação -->
-        <div class="nav-menu">
-            <div class="menu-item active" data-target="dashboard">
-                <i class="fas fa-home"></i>
-                <span>Dashboard</span>
-            </div>
-            <div class="menu-item" data-target="clientes">
-                <i class="fas fa-users"></i>
-                <span>Clientes</span>
-            </div>
-            <div class="menu-item" data-target="vendas">
-                <i class="fas fa-chart-line"></i>
-                <span>Vendas</span>
-            </div>
-            <div class="menu-item" data-target="produtos">
-                <i class="fas fa-box-open"></i>
-                <span>Produtos</span>
-            </div>
-            <div class="menu-item" data-target="config">
-                <i class="fas fa-cog"></i>
-                <span>Configurações</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Área de Conteúdo -->
-    <div class="main-content">
-        <!-- Dashboard -->
-        <div class="content-section active" id="dashboard">
-            <h1>Dashboard</h1>
             <div class="card">
-                <p>Bem-vindo ao Sistema Integrado de Gestão (SIG)</p>
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-info-circle"></i> Informações do Sistema</h3>
+                </div>
+                <p>Bem-vindo ao <strong>Sistema Integrado de Gestão (SIG)</strong>. Use o menu lateral para navegar entre as seções.</p>
             </div>
-        </div>
-
-        <!-- Outras seções... (mantidas como no exemplo anterior) -->
-    </div>
+        </section>
+    </main>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        // Alternar seções de conteúdo
+        document.addEventListener('DOMContentLoaded', () => {
             const menuItems = document.querySelectorAll('.menu-item');
-            
+            const sections = document.querySelectorAll('.content-section');
+
             menuItems.forEach(item => {
-                item.addEventListener('click', function() {
+                item.addEventListener('click', () => {
                     menuItems.forEach(i => i.classList.remove('active'));
-                    this.classList.add('active');   
-                    document.querySelectorAll('.content-section').forEach(section => {
+                    item.classList.add('active');
+                    const target = item.getAttribute('data-target');
+
+                    sections.forEach(section => {
                         section.classList.remove('active');
+                        if (section.id === target) section.classList.add('active');
                     });
-                    
-                    const target = this.getAttribute('data-target');
-                    document.getElementById(target).classList.add('active');
                 });
             });
         });
     </script>
+
 </body>
 </html>

@@ -1,14 +1,127 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Registro | Sistema de Estoque</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/registro.css') }}">
 </head>
 <body>
-    <h1>Criar formulario de cadastro de novo usuario</h1><br>
+  <div class="background-effect"></div>
+  
+  <div class="register-container">
+    <div class="register-header">
+      <div class="logo">
+        <i class="fas fa-boxes"></i>
+        <span>Sistema Estoque</span>
+      </div>
+      <h1>Criar Nova Conta</h1>
+      <p>Preencha os dados abaixo para criar sua conta</p>
+    </div>
 
-    <a href="{{url_for('login')}}">Já possui uma conta? Entrar</a>
-    
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for category, message in messages %}
+            <div class="flash-message {{ category }}">
+              <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-circle' }}"></i>
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <form class="register-form" action="/registro" method="POST">
+      <div class="form-group">
+        <label for="nome">
+          <i class="fas fa-user"></i>
+          Nome de Usuário
+        </label>
+        <input 
+          type="text" 
+          name="nome" 
+          id="nome" 
+          placeholder="Digite seu nome de usuário" 
+          required
+          minlength="3"
+          value="{{ request.form.nome if request.form }}"
+        >
+        <div class="input-feedback">
+          <i class="fas fa-check-circle valid-icon"></i>
+          <i class="fas fa-exclamation-circle invalid-icon"></i>
+          <span class="hint">Mínimo 3 caracteres</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="senha">
+          <i class="fas fa-lock"></i>
+          Senha
+        </label>
+        <input 
+          type="password" 
+          name="senha" 
+          id="senha" 
+          placeholder="Digite sua senha" 
+          required
+          minlength="4"
+        >
+        <div class="input-feedback">
+          <i class="fas fa-check-circle valid-icon"></i>
+          <i class="fas fa-exclamation-circle invalid-icon"></i>
+          <span class="hint">Mínimo 4 caracteres</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="confirmar_senha">
+          <i class="fas fa-lock"></i>
+          Confirmar Senha
+        </label>
+        <input 
+          type="password" 
+          name="confirmar_senha" 
+          id="confirmar_senha" 
+          placeholder="Confirme sua senha" 
+          required
+        >
+        <div class="input-feedback">
+          <i class="fas fa-check-circle valid-icon"></i>
+          <i class="fas fa-exclamation-circle invalid-icon"></i>
+          <span class="hint">As senhas devem coincidir</span>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-register" id="register-btn">
+        <i class="fas fa-user-plus"></i>
+        <span class="btn-text">Criar Conta</span>
+        <div class="btn-loading">
+          <i class="fas fa-spinner fa-spin"></i>
+          Criando conta...
+        </div>
+      </button>
+    </form>
+
+    <div class="auth-links">
+      <p>Já possui uma conta? 
+        <a href="{{ url_for('login_init') }}" class="auth-link">
+          <i class="fas fa-sign-in-alt"></i>
+          Fazer Login
+        </a>
+      </p>
+      <a href="{{ url_for('home') }}" class="back-link">
+        <i class="fas fa-arrow-left"></i>
+        Voltar para o Início
+      </a>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/registro.js') }}"></script>
 </body>
 </html>

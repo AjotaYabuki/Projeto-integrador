@@ -1,4 +1,24 @@
-/* Reset básico */
+/* ============================================================
+   🌐 VARIÁVEIS E RESET
+   ============================================================ */
+:root {
+  --primary-color: #2563eb;
+  --primary-dark: #1d4ed8;
+  --primary-light: #3b82f6;
+  --secondary-color: #64748b;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  --dark-color: #1e293b;
+  --light-color: #f8fafc;
+  --text-dark: #1f2937;
+  --text-light: #6b7280;
+  --border-radius: 12px;
+  --shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
+  --transition: all 0.3s ease;
+}
+
 *,
 *::before,
 *::after {
@@ -6,128 +26,252 @@
   margin: 0;
   padding: 0;
 }
-.flash_alerta {
-  color: red;
-  font-size: 50px;
-  border-radius: 30px;
-  font-weight: bold;
-}
+
+/* ============================================================
+   🧭 LAYOUT GERAL
+   ============================================================ */
 body {
-  font-family: Arial, sans-serif;
-  background: url('../images/inicial.jpg') no-repeat center center fixed;
-  background-size: cover;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%),
+              url('../images/inicial.jpg') no-repeat center/cover fixed;
+  background-blend-mode: overlay;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: rgb(90, 49, 49);
+  padding: 20px;
+  color: var(--text-dark);
+  line-height: 1.6;
 }
 
-.titulo {
+/* ============================================================
+   🔔 ALERTAS
+   ============================================================ */
+.flash_alerta {
+  background: linear-gradient(135deg, var(--danger-color), #dc2626);
+  color: white;
+  font-weight: 600;
+  padding: 1rem 2rem;
+  border-radius: var(--border-radius);
   text-align: center;
   margin-bottom: 2rem;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow);
+  animation: pulse 2s infinite;
+  backdrop-filter: blur(10px);
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+/* ============================================================
+   🏷️ TÍTULOS
+   ============================================================ */
+.titulo {
+  text-align: center;
+  margin-bottom: 3rem;
+  text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+  animation: fadeInUp 0.6s ease-out;
 }
 
 .titulo h1 {
-  font-size: 2.5rem;
-  margin-bottom: 0.5rem;
+  font-size: 3rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #fff, #e2e8f0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .titulo h2 {
-  font-size: 1.2rem;
-  font-weight: normal;
+  font-size: 1.3rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.9);
+  max-width: 500px;
+  margin: 0 auto;
 }
 
+.tituloadm {
+  color: #000;
+  font-family: 'Poppins', sans-serif;
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.25);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-lg);
+  padding: 1.5rem 3rem;
+  backdrop-filter: blur(20px);
+  margin-bottom: 2rem;
+  transition: var(--transition);
+}
+.tituloadm:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.25);
+}
+
+/* ============================================================
+   🪪 CONTAINER E FORMULÁRIOS
+   ============================================================ */
 .container {
-  background-color: rgba(40, 44, 159, 0.8);
-  padding: 2rem;
-  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  padding: 3rem;
+  border-radius: var(--border-radius);
   width: 100%;
-  max-width: 400px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-  border: 2px solid white;
+  max-width: 450px;
+  border: 1px solid rgba(255,255,255,0.2);
+  box-shadow: var(--shadow-lg);
+  animation: fadeInUp 0.6s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.container::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
 }
 
 .login form {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-}
-
-.login form div {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  gap: 1.8rem;
 }
 
 .login label {
-  font-weight: bold;
-  font-size: 1.1rem;
+  font-weight: 600;
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
 }
 
 .login input {
-  padding: 0.8rem;
-  border: none;
-  border-radius: 5px;
+  padding: 1rem 1.2rem;
+  border: 2px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.9);
   font-size: 1rem;
-  background-color: rgba(255, 255, 255, 0.9);
+  transition: var(--transition);
+}
+.login input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  background: white;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+  transform: translateY(-1px);
 }
 
+/* 
+    BOTÕES
+    */
+button,
 .login button {
-  padding: 0.8rem;
-  background-color: #110c0c;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
   color: white;
   border: none;
-  border-radius: 5px;
-  font-weight: bold;
+  border-radius: 8px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.3s;
-  width: 50%;
-  margin: 0 auto;
-  font-size: 1rem;
+  transition: var(--transition);
+  width: 60%;
+  margin: 1rem auto 0;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
 }
 
-.login button:hover {
-  background-color: #333;
+button::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
 }
 
-/* Responsividade */
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(37,99,235,0.3);
+}
+button:hover::before { left: 100%; }
+button:active { transform: translateY(0); }
+
+/* 
+   LINKS
+    */
+.login-links {
+  text-align: center;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255,255,255,0.2);
+}
+.login-links a {
+  color: rgba(255,255,255,0.9);
+  text-decoration: none;
+  margin: 0 1rem;
+  transition: var(--transition);
+}
+.login-links a:hover {
+  color: white;
+  transform: translateY(-1px);
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.badge-success { background: var(--success-color); color: white; }
+.badge-warning { background: var(--warning-color); color: white; }
+.badge-danger  { background: var(--danger-color); color: white; }
+
+/* 
+   RESPONSIVIDADE
+    */
+@media (max-width: 768px) {
+  .titulo h1 { font-size: 2.2rem; }
+  .tituloadm { font-size: 2rem; padding: 1rem 2rem; }
+  .container { padding: 2rem; max-width: 400px; }
+  button { width: 70%; }
+}
+
 @media (max-width: 480px) {
-  .container {
-    width: 90%;
-    padding: 1.5rem;
-  }
-  
-  .titulo h1 {
-    font-size: 2rem;
-  }
-  
-  .titulo h2 {
-    font-size: 1rem;
+  .titulo h1 { font-size: 1.8rem; }
+  .tituloadm { font-size: 1.6rem; padding: 0.8rem 1.5rem; }
+  .container { width: 95%; padding: 1.5rem; }
+  button { width: 80%; padding: 0.9rem; }
+}
+
+/* 
+   ACESSIBILIDADE
+    */
+.login input:focus,
+button:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
   }
 }
 
-.tituloadm {
-    /* Reset completo */
-    all: unset;
-    
-    /* Estilos específicos */
-    display: inline-block;
-    color: #000000 !important; /* Preto puro com !important */
-    font-family: 'Poppins', sans-serif;
-    font-size: 50px;
-    font-weight: 600;
-    border-radius: 30px;
-    padding: 15px 25px;
-    
-    /* Efeitos visuais */
-    backdrop-filter: blur(10px);
-    background-color: rgba(255, 255, 255, 0.3);
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
-    
-    /* Garante visibilidade */
-    position: relative;
-    z-index: 1000;
+/* 
+   ANIMAÇÕES
+    */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
 }

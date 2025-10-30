@@ -1,46 +1,56 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <title>Sistema de estoque</title>
-        <link rel="stylesheet" type="text/css" href="..\static\css\login.css">
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&family=Montserrat:wght@700&family=Roboto+Condensed:wght@700&family=Barlow+Semi+Condensed:wght@600&display=swap" rel="stylesheet">
-    </head>
-<!-- se tiver mensagem no backend exibe -->
-    {% set menssagem = get_flashed_messages() %}
-    {% if menssagem %}
-        <div class="flash_alerta" color="black">
-            {{menssagem[0]}}
-        </div>
-    {% endif %}
-    <body id="loginBody">
-        <div class="tituloadm">administrador</h1>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel do Administrador | SIG</title>
 
-        <div class="titulo">
-            <h1>CADASTRAR USUARIO</h1>
-            <h2>Sistema de Gerenciamento de Estoque</h2>
-        </div>   
+  <!-- Ícones e CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+<body>
 
-        <div class="container">
-            
-            
-            <div class="login">
-                <form action="/cadastrarUsuario" id="login" method="post">
-                    <div>
-                        <label for="nome">Usuario:</label>
-                        <input type="text" name="nome" id="nome" required placeholder="Digite seu nome"/>
-                    </div>
-                    <div> 
-                        <label for="senha" id="senha">Senha:</label>
-                        <input type="password" name="senha" id="senha" required placeholder="Digite sua senha"/>
-                    </div>
-                    <div>
-                        <button type="submit" id="btn_login">LOGIN</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </body>
+  <!-- Título principal -->
+  <div class="tituloadm">
+    Painel Administrativo
+  </div>
+
+  <!-- Container principal -->
+  <div class="container">
+    <div class="login text-center">
+      <h2 class="mb-2">Bem-vindo(a), Administrador!</h2>
+      <p class="mb-2">
+        Aqui você pode gerenciar usuários, visualizar relatórios e controlar o sistema SIG.
+      </p>
+
+      <!-- Badges de status -->
+      <div class="mb-2">
+        <span class="status-badge badge-success">Online</span>
+        <span class="status-badge badge-warning">Sessão Ativa</span>
+      </div>
+
+      <!-- Botões principais -->
+      <div class="mt-2">
+        <a href="{{ url_for('registro') }}">
+          <button type="button">Cadastrar Usuário</button>
+        </a>
+
+        <a href="{{ url_for('home') }}">
+          <button type="button" style="background: linear-gradient(135deg, var(--danger-color), #b91c1c);">
+            Sair
+          </button>
+        </a>
+      </div>
+
+      <!-- Links adicionais -->
+      <div class="login-links">
+        <a href="#">Ver Relatórios</a>
+        <a href="#">Configurações</a>
+        <a href="#">Ajuda</a>
+      </div>
+    </div>
+  </div>
+
+</body>
 </html>
-</html> 
