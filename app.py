@@ -1,364 +1,293 @@
-# app.py
-import os
-from flask import Flask, render_template, redirect, request, flash, url_for, session, jsonify
+from flask import Flask, render_template, redirect, request, flash, url_for, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
-import logging
+from flask_cors import CORS
+from dotenv import load_dotenv
+from datetime import datetime, timedelta
+import os
+import random
 
-# Configuração de logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# --------------------------
+# 🔧 Configuração Base
+# --------------------------
+load_dotenv()
 
 app = Flask(__name__)
+CORS(app)
+app.config['SECRET_KEY'] = os.getenv("SECRET_KEY", "default_secret_key")
 
-# ---------------------------------------------
-# 🧭 ETAPA 1 — Configuração do Flask e Banco
-# ---------------------------------------------
+# --------------------------
+# 🗄️ Banco de Dados
+# --------------------------
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///local.db")
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg2://")
 
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'chave-dev-secreta')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///estoque.db'
-
+app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-# ---------------------------------------------
-# 🗃️ ETAPA 2 — Modelos do Banco de Dados
-# ---------------------------------------------
-
+# --------------------------
+# 👥 Modelos
+# --------------------------
 class Usuario(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(80), unique=True, nullable=False)
-    senha_hash = db.Column(db.String(255), nullable=False)
-    data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    def set_senha(self, senha):
-        self.senha_hash = generate_password_hash(senha)
-    
-    def check_senha(self, senha):
-        return check_password_hash(self.senha_hash, senha)
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'nome': self.nome,
-            'data_criacao': self.data_criacao.isoformat()
-        }
+    senha = db.Column(db.String(120), nullable=False)
+    cargo = db.Column(db.String(50), default="Usuário")
+
+class Cliente(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(120), nullable=False)
+    email = db.Column(db.String(120), unique=True)
+    telefone = db.Column(db.String(20))
 
 class Produto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(100), nullable=False)
-    descricao = db.Column(db.Text)
-    quantidade = db.Column(db.Integer, nullable=False, default=0)
-    minimo = db.Column(db.Integer, default=5)
-    preco = db.Column(db.Float, default=0.0)
-    data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
-    data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'nome': self.nome,
-            'descricao': self.descricao,
-            'quantidade': self.quantidade,
-            'minimo': self.minimo,
-            'preco': self.preco,
-            'status_estoque': 'CRÍTICO' if self.quantidade <= 0 else 'BAIXO' if self.quantidade <= self.minimo else 'NORMAL'
-        }
+    nome = db.Column(db.String(120), nullable=False)
+    preco = db.Column(db.Float, nullable=False)
+    estoque = db.Column(db.Integer, nullable=False, default=0)
+    validade = db.Column(db.Date, nullable=True)
+    limite_minimo = db.Column(db.Integer, default=5)
 
-# ---------------------------------------------
-# 🔐 ETAPA 6 — Sistema de Autenticação e Segurança
-# ---------------------------------------------
+class Venda(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    cliente_id = db.Column(db.Integer, db.ForeignKey('cliente.id'))
+    produto_id = db.Column(db.Integer, db.ForeignKey('produto.id'))
+    quantidade = db.Column(db.Integer, nullable=False)
+    data_venda = db.Column(db.DateTime, default=datetime.utcnow)
+    cliente = db.relationship("Cliente")
+    produto = db.relationship("Produto")
 
-def login_required(f):
-    from functools import wraps
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            flash('Por favor, faça login para acessar esta página.', 'warning')
-            return redirect(url_for('login_init'))
-        return f(*args, **kwargs)
-    return decorated_function
-
-def admin_required(f):
-    from functools import wraps
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'user_nome' not in session or session['user_nome'] != 'Administrador':
-            flash('Acesso restrito para administradores.', 'danger')
-            return redirect(url_for('dashboard'))
-        return f(*args, **kwargs)
-    return decorated_function
-
-# ---------------------------------------------
-# 📦 ETAPA 3 — Funções de Controle de Estoque
-# ---------------------------------------------
-
-def verificar_estoque():
-    """Verifica produtos com estoque baixo ou crítico"""
-    try:
-        produtos = Produto.query.all()
-        alertas = {
-            'critico': [p for p in produtos if p.quantidade <= 0],
-            'baixo': [p for p in produtos if 0 < p.quantidade <= p.minimo],
-            'total_alertas': 0
-        }
-        alertas['total_alertas'] = len(alertas['critico']) + len(alertas['baixo'])
-        return alertas
-    except Exception as e:
-        logger.error(f"Erro ao verificar estoque: {e}")
-        return {'critico': [], 'baixo': [], 'total_alertas': 0}
-
-def atualizar_quantidade_produto(produto_id, nova_quantidade):
-    """Atualiza quantidade do produto com validação"""
-    try:
-        produto = Produto.query.get(produto_id)
-        if produto:
-            produto.quantidade = max(0, nova_quantidade)  # Não permite quantidade negativa
-            produto.data_atualizacao = datetime.utcnow()
-            db.session.commit()
-            return True, "Quantidade atualizada com sucesso!"
-        return False, "Produto não encontrado."
-    except Exception as e:
-        db.session.rollback()
-        logger.error(f"Erro ao atualizar produto {produto_id}: {e}")
-        return False, "Erro ao atualizar produto."
-
-# ---------------------------------------------
-# 🌐 Rotas Principais
-# ---------------------------------------------
-
+# --------------------------
+# 🌐 Rotas
+# --------------------------
 @app.route('/')
 def home():
     return render_template('homepage.html')
 
-@app.route('/login', methods=['GET'])
+@app.route('/login')
 def login_init():
-    if 'user_id' in session:
-        return redirect(url_for('dashboard'))
     return render_template('login.html')
 
 @app.route('/registro', methods=['GET', 'POST'])
 def registro():
-    if 'user_id' in session:
-        return redirect(url_for('dashboard'))
-    
     if request.method == 'POST':
-        nome = request.form.get('nome', '').strip()
-        senha = request.form.get('senha', '')
-        confirmar_senha = request.form.get('confirmar_senha', '')
-        
-        # Validações
+        nome = request.form.get('nome')
+        senha = request.form.get('senha')
+        cargo = request.form.get('cargo', 'Usuário')
+
         if not nome or not senha:
-            flash('Preencha todos os campos.', 'danger')
-            return render_template('registro.html')
-        
-        if len(senha) < 4:
-            flash('A senha deve ter pelo menos 4 caracteres.', 'danger')
-            return render_template('registro.html')
-        
-        if senha != confirmar_senha:
-            flash('Senhas não coincidem.', 'danger')
-            return render_template('registro.html')
-        
-        if Usuario.query.filter_by(nome=nome).first():
-            flash('Nome de usuário já existe.', 'danger')
-            return render_template('registro.html')
-        
-        # Criar novo usuário
-        try:
-            novo_usuario = Usuario(nome=nome)
-            novo_usuario.set_senha(senha)
-            
-            db.session.add(novo_usuario)
-            db.session.commit()
-            
-            flash('Registro realizado com sucesso! Faça login.', 'success')
-            return redirect(url_for('login_init'))
-            
-        except Exception as e:
-            db.session.rollback()
-            logger.error(f"Erro no registro: {e}")
-            flash('Erro ao registrar usuário.', 'danger')
-    
+            flash("Preencha todos os campos.", "danger")
+            return redirect(url_for('registro'))
+
+        usuario_existente = Usuario.query.filter_by(nome=nome).first()
+        if usuario_existente:
+            flash("Usuário já existe.", "warning")
+            return redirect(url_for('registro'))
+
+        novo_usuario = Usuario(nome=nome, senha=senha, cargo=cargo)
+        db.session.add(novo_usuario)
+        db.session.commit()
+        flash("Usuário registrado com sucesso! Faça login.", "success")
+        return redirect(url_for('login_init'))
+
     return render_template('registro.html')
 
 @app.route('/login', methods=['POST'])
 def login():
-    nome = request.form.get('nome', '').strip()
-    senha = request.form.get('senha', '')
-    
-    if not nome or not senha:
-        flash('Preencha todos os campos.', 'danger')
-        return redirect(url_for('login_init'))
-    
-    # Usuário administrativo
+    nome = request.form.get('nome')
+    senha = request.form.get('senha')
+
     if nome == 'adm' and senha == '000':
-        session['user_id'] = 'admin'
-        session['user_nome'] = 'Administrador'
-        flash('Login administrativo realizado!', 'success')
-        return redirect(url_for('administrador'))
-    
-    # Buscar usuário no banco
+        session['usuario_nome'] = 'Administrador'
+        session['usuario_cargo'] = 'Admin'
+        return redirect(url_for('dashboard'))
+
     usuario = Usuario.query.filter_by(nome=nome).first()
-    
-    if usuario and usuario.check_senha(senha):
-        session['user_id'] = usuario.id
-        session['user_nome'] = usuario.nome
-        flash(f'Bem-vindo, {usuario.nome}!', 'success')
+    if usuario and usuario.senha == senha:
+        session['usuario_nome'] = usuario.nome
+        session['usuario_cargo'] = usuario.cargo
         return redirect(url_for('dashboard'))
     else:
-        flash('Credenciais inválidas.', 'danger')
+        flash('Usuário ou senha incorretos.', 'danger')
         return redirect(url_for('login_init'))
 
-@app.route('/dashboard')
-@login_required
-def dashboard():
-    alertas_estoque = verificar_estoque()
-    produtos = Produto.query.order_by(Produto.nome).all()
-    
-    return render_template('dashboard.html', 
-                         alertas=alertas_estoque,
-                         produtos=produtos)
-
-@app.route('/administrador')
-@login_required
-@admin_required
-def administrador():
-    usuarios = Usuario.query.all()
-    produtos = Produto.query.all()
-    alertas_estoque = verificar_estoque()
-    
-    return render_template('administrador.html',
-                         usuarios=usuarios,
-                         produtos=produtos,
-                         alertas=alertas_estoque)
-
+# --------------------------
+# 🚪 LOGOUT - Rota Funcional
+# --------------------------
 @app.route('/logout')
 def logout():
+    """
+    Rota de logout que limpa a sessão do usuário
+    e redireciona para a página de login
+    """
     session.clear()
-    flash('Logout realizado com sucesso.', 'info')
-    return redirect(url_for('home'))
+    flash("Você saiu da conta com sucesso.", "info")
+    return redirect(url_for('login_init'))
 
-# ---------------------------------------------
-# 🌐 ETAPA 5 — APIs REST
-# ---------------------------------------------
+@app.route('/dashboard')
+def dashboard():
+    if 'usuario_nome' not in session:
+        flash("Faça login para acessar o painel.", "warning")
+        return redirect(url_for('login_init'))
 
-@app.route('/api/produtos')
-@login_required
-def listar_produtos():
-    try:
-        produtos = Produto.query.all()
-        return jsonify([p.to_dict() for p in produtos])
-    except Exception as e:
-        logger.error(f"Erro na API produtos: {e}")
-        return jsonify({'error': 'Erro interno'}), 500
+    produtos = Produto.query.all()
+    vendas = Venda.query.all()
+    clientes = Cliente.query.all()
 
-@app.route('/api/produtos/<int:produto_id>')
-@login_required
-def obter_produto(produto_id):
-    try:
-        produto = Produto.query.get(produto_id)
-        if produto:
-            return jsonify(produto.to_dict())
-        return jsonify({'error': 'Produto não encontrado'}), 404
-    except Exception as e:
-        logger.error(f"Erro ao obter produto {produto_id}: {e}")
-        return jsonify({'error': 'Erro interno'}), 500
+    alertas = []
+    for produto in produtos:
+        if produto.estoque <= produto.limite_minimo:
+            alertas.append(f"⚠️ Estoque baixo de {produto.nome}")
+        if produto.validade and produto.validade <= datetime.now().date() + timedelta(days=5):
+            alertas.append(f"⏰ {produto.nome} perto da validade ({produto.validade})")
 
-@app.route('/api/produtos', methods=['POST'])
-@login_required
-@admin_required
-def criar_produto():
-    try:
-        data = request.get_json()
-        if not data or not data.get('nome'):
-            return jsonify({'error': 'Nome do produto é obrigatório'}), 400
+    usuario_nome = session.get('usuario_nome', 'Usuário')
+    usuario_cargo = session.get('usuario_cargo', 'Padrão')
+
+    return render_template('dashboard.html',
+                           produtos=produtos,
+                           clientes=clientes,
+                           vendas=vendas,
+                           alertas=alertas,
+                           usuario_nome=usuario_nome,
+                           usuario_cargo=usuario_cargo)
+
+# --------------------------
+# 📊 API para gráficos
+# --------------------------
+@app.route('/api/graficos')
+def api_graficos():
+    # Dados simulados para o gráfico de vendas mensais (últimos 6 meses)
+    vendas_meses = ["Jun", "Jul", "Ago", "Set", "Out", "Nov"]
+    vendas_valores = [random.randint(7000, 12000) for _ in range(6)]
+    
+    # Dados simulados para o gráfico de crescimento de clientes
+    clientes_novos = [random.randint(5, 15) for _ in range(6)]
+
+    # Dados simulados para o gráfico de vendas por canal
+    vendas_canais = {"Online": 45, "Loja Física": 35, "Marketplace": 20}
+
+    return jsonify({
+        "vendas_mensais": {
+            "labels": vendas_meses,
+            "data": vendas_valores
+        },
+        "clientes_crescimento": {
+            "labels": vendas_meses,
+            "data": clientes_novos
+        },
+        "vendas_canais": {
+            "labels": list(vendas_canais.keys()),
+            "data": list(vendas_canais.values())
+        },
+        "clientes_count": Cliente.query.count(),
+        "produtos_count": Produto.query.count(),
+        "vendas_total": sum(v.quantidade * v.produto.preco for v in Venda.query.all() if v.produto)
+    })
+
+# --------------------------
+# ➕ CRUD BÁSICO
+# --------------------------
+@app.route('/add_cliente', methods=['POST'])
+def add_cliente():
+    if 'usuario_nome' not in session:
+        flash("Faça login para adicionar clientes.", "warning")
+        return redirect(url_for('login_init'))
         
-        novo_produto = Produto(
-            nome=data['nome'],
-            descricao=data.get('descricao', ''),
-            quantidade=data.get('quantidade', 0),
-            minimo=data.get('minimo', 5),
-            preco=data.get('preco', 0.0)
-        )
+    nome = request.form['nome']
+    email = request.form['email']
+    telefone = request.form['telefone']
+    
+    # Verifica se o cliente já existe
+    if Cliente.query.filter_by(email=email).first():
+        flash("Cliente com este e-mail já existe.", "danger")
+        return redirect(url_for('dashboard'))
         
-        db.session.add(novo_produto)
+    novo = Cliente(nome=nome, email=email, telefone=telefone)
+    db.session.add(novo)
+    db.session.commit()
+    flash("Cliente adicionado com sucesso!", "success")
+    return redirect(url_for('dashboard'))
+
+@app.route('/add_produto', methods=['POST'])
+def add_produto():
+    if 'usuario_nome' not in session:
+        flash("Faça login para adicionar produtos.", "warning")
+        return redirect(url_for('login_init'))
+        
+    try:
+        nome = request.form['nome']
+        preco = float(request.form['preco'])
+        estoque = int(request.form['estoque'])
+        validade = request.form.get('validade')
+        validade_data = datetime.strptime(validade, "%Y-%m-%d").date() if validade else None
+        
+        # Verifica se o produto já existe
+        if Produto.query.filter_by(nome=nome).first():
+            flash("Produto com este nome já existe.", "danger")
+            return redirect(url_for('dashboard'))
+            
+        novo = Produto(nome=nome, preco=preco, estoque=estoque, validade=validade_data)
+        db.session.add(novo)
         db.session.commit()
-        
-        return jsonify(novo_produto.to_dict()), 201
-        
+        flash("Produto adicionado com sucesso!", "success")
     except Exception as e:
-        db.session.rollback()
-        logger.error(f"Erro ao criar produto: {e}")
-        return jsonify({'error': 'Erro ao criar produto'}), 500
-
-@app.route('/api/estoque/alertas')
-@login_required
-def obter_alertas_estoque():
-    try:
-        alertas = verificar_estoque()
-        return jsonify(alertas)
-    except Exception as e:
-        logger.error(f"Erro ao obter alertas: {e}")
-        return jsonify({'error': 'Erro interno'}), 500
-
-# ---------------------------------------------
-# 🛠️ Rotas de Gerenciamento (Admin)
-# ---------------------------------------------
-
-@app.route('/admin/produto/novo', methods=['GET', 'POST'])
-@login_required
-@admin_required
-def novo_produto():
-    if request.method == 'POST':
-        nome = request.form.get('nome', '').strip()
-        quantidade = request.form.get('quantidade', 0, type=int)
-        minimo = request.form.get('minimo', 5, type=int)
+        flash(f"Erro ao adicionar produto: {e}", "danger")
         
-        if not nome:
-            flash('Nome do produto é obrigatório.', 'danger')
-            return render_template('novo_produto.html')
+    return redirect(url_for('dashboard'))
+
+@app.route('/add_venda', methods=['POST'])
+def add_venda():
+    if 'usuario_nome' not in session:
+        flash("Faça login para registrar vendas.", "warning")
+        return redirect(url_for('login_init'))
         
-        try:
-            produto = Produto(
-                nome=nome,
-                descricao=request.form.get('descricao', ''),
-                quantidade=quantidade,
-                minimo=minimo,
-                preco=request.form.get('preco', 0.0, type=float)
-            )
-            
-            db.session.add(produto)
-            db.session.commit()
-            
-            flash('Produto cadastrado com sucesso!', 'success'),app,
-            return redirect(url_for('administrador'))
-            
-        except Exception as e:
-            db.session.rollback()
-            logger.error(f"Erro ao criar produto: {e}")
-            flash('Erro ao cadastrar produto.', 'danger')
+    cliente_id = int(request.form['cliente_id'])
+    produto_id = int(request.form['produto_id'])
+    quantidade = int(request.form['quantidade'])
     
-    return render_template('novo_produto.html')
+    produto = Produto.query.get(produto_id)
+    if not produto or produto.estoque < quantidade:
+        flash("Estoque insuficiente ou produto não encontrado.", "danger")
+        return redirect(url_for('dashboard'))
+        
+    venda = Venda(cliente_id=cliente_id, produto_id=produto_id, quantidade=quantidade)
+    db.session.add(venda)
 
-# ---------------------------------------------
-# Inicialização do Banco
-# ---------------------------------------------
+    produto.estoque -= quantidade
+    db.session.commit()
+    flash("Venda registrada com sucesso!", "success")
+    return redirect(url_for('dashboard'))
 
-first_request_done = False
+# --------------------------
+# 🩺 Ping
+# --------------------------
+@app.route('/ping')
+def ping():
+    return {"status": "ok", "mensagem": "API funcionando corretamente!"}
 
-@app.before_request
-def create_tables():
-    global first_request_done
-    if not first_request_done:
-        try:
-            db.create_all()
-            logger.info("Tabelas criadas/verificadas com sucesso")
-            first_request_done = True
-        except Exception as e:
-            logger.error(f"Erro ao criar tabelas: {e}")
-    
+# --------------------------
+# 🚀 Inicialização
+# --------------------------
 if __name__ == "__main__":
-    app.run(host="0.0.0.0",debug=os.environ.get('FLASK_DEBUG', True))
+    with app.app_context():
+        db.create_all()
+        # Gera dados fictícios só uma vez
+        if not Cliente.query.first():
+            for i in range(5):
+                db.session.add(Cliente(
+                    nome=f"Cliente {i+1}",
+                    email=f"cliente{i+1}@teste.com",
+                    telefone=f"(11) 9000{i+1}-0000"
+                ))
+            for i in range(5):
+                db.session.add(Produto(
+                    nome=f"Produto {i+1}",
+                    preco=random.uniform(10, 100),
+                    estoque=random.randint(2, 20),
+                    validade=datetime.now().date() + timedelta(days=random.randint(2, 30))
+                ))
+            db.session.commit()
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)), debug=True)

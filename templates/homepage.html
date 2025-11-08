@@ -1,170 +1,108 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SIG - Sistema Integrado de Gerenciamento</title>
-  <link rel="stylesheet" href="css/homepage.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIG - Sistema Integrado</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-  <!-- ===== TOPO ===== -->
-  <header class="top-bar">
-    <div class="logo">SIG</div>
-    <div class="auth-buttons">
-      <a href="{{ url_for('login') }}" class="auth-btn">Login</a>
-      <a href="{{ url_for('registro') }}" class="auth-btn primary">Criar Conta</a>
-    </div>
-  </header>
 
-  <!-- ===== SEÇÃO HERO ===== -->
-  <section class="hero-section">
-    <div class="hero-content fade-in">
-      <h1 class="hero-title">SIG</h1>
-      <h2 class="hero-subtitle">Sistema Integrado de Gerenciamento</h2>
-      <p class="hero-description">
-        Solução completa para gestão de estoques, controle de inventário e otimização de processos logísticos.
-      </p>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h2>SIG</h2>
+            <div class="user-info">
+                <div class="user-name">Carlos Silva</div>
+                <div class="user-role">Administrador</div>
+            </div>
 
-      <div class="hero-buttons">
-        <a href="{{ url_for('login') }}" class="btn btn-primary">Entrar no Sistema</a>
-        <a href="{{ url_for('registro') }}" class="btn btn-secondary">Solicitar Demonstração</a>
-      </div>
+            <!-- Botão do modo escuro -->
+            <button id="theme-toggle" class="theme-toggle" title="Alternar tema">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
 
-      <div class="icon-grid">
-        <div class="icon-item"><i class="fab fa-apple"></i></div>
-        <div class="icon-item"><i class="fab fa-android"></i></div>
-        <div class="icon-item"><i class="fab fa-windows"></i></div>
-      </div>
-    </div>
-  </section>
+        <nav class="nav-menu">
+            <a class="menu-item active" data-target="dashboard"><i class="fas fa-home"></i> Dashboard</a>
+            <a class="menu-item" data-target="clientes"><i class="fas fa-users"></i> Clientes</a>
+            <a class="menu-item" data-target="vendas"><i class="fas fa-chart-line"></i> Vendas</a>
+            <a class="menu-item" data-target="produtos"><i class="fas fa-box-open"></i> Produtos</a>
+            <a class="menu-item" data-target="config"><i class="fas fa-cog"></i> Configurações</a>
+        </nav>
+    </aside>
 
-  <!-- ===== SEÇÃO DE RECURSOS ===== -->
-  <section class="features-section">
-    <div class="features-grid">
-      <div class="feature-card">
-        <i class="fas fa-warehouse feature-icon"></i>
-        <h3 class="feature-title">Armazenamento</h3>
-        <p class="feature-description">Gerencie seus estoques com precisão e eficiência em tempo real.</p>
-      </div>
-      <div class="feature-card">
-        <i class="fas fa-clipboard-check feature-icon"></i>
-        <h3 class="feature-title">Controle</h3>
-        <p class="feature-description">Acompanhe movimentações e relatórios com total transparência.</p>
-      </div>
-      <div class="feature-card">
-        <i class="fas fa-sync-alt feature-icon"></i>
-        <h3 class="feature-title">Atualizações</h3>
-        <p class="feature-description">Receba insights e atualizações automáticas sobre seu inventário.</p>
-      </div>
-    </div>
-  </section>
+    <!-- Conteúdo Principal -->
+    <main class="main-content">
+        <div class="content-header">
+            <h1><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
+        </div>
 
-  <!-- ===== SEÇÃO DE DEMONSTRAÇÃO ===== -->
-  <section class="demo-section">
-    <div class="demo-content">
-      <div class="demo-text">
-        <h2 class="section-title">Conheça Nosso Sistema</h2>
-        <p class="section-text">
-          O SIG oferece uma solução completa para gestão de estoques com tecnologia de ponta. 
-          Nosso sistema foi desenvolvido para otimizar processos e aumentar a eficiência operacional.
-        </p>
-        <p class="section-text">
-          Assista ao vídeo e descubra como nossa plataforma pode transformar a sua gestão.
-        </p>
+        <section id="dashboard" class="content-section active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <i class="fas fa-users stat-icon"></i>
+                    <span class="stat-number">120</span>
+                    <span class="stat-label">Clientes</span>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-box stat-icon"></i>
+                    <span class="stat-number">85</span>
+                    <span class="stat-label">Produtos</span>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-dollar-sign stat-icon"></i>
+                    <span class="stat-number">R$ 45k</span>
+                    <span class="stat-label">Vendas</span>
+                </div>
+            </div>
 
-        <form class="newsletter-form">
-          <div class="form-group">
-            <label for="email">Receba mais informações:</label>
-            <input type="email" id="email" placeholder="Digite seu melhor e-mail" required />
-          </div>
-          <button type="submit" class="btn btn-primary">Enviar</button>
-        </form>
-      </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-info-circle"></i> Informações do Sistema</h3>
+                </div>
+                <p>Bem-vindo ao <strong>Sistema Integrado de Gestão (SIG)</strong>. Use o menu lateral para navegar entre as seções.</p>
+            </div>
+        </section>
+    </main>
 
-      <div class="demo-visual">
-        <iframe 
-          class="demo-image"
-          src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-          title="Demonstração do Sistema"
-          frameborder="0"
-          allowfullscreen>
-        </iframe>
-      </div>
-    </div>
-  </section>
+    <script>
+        // Alternar seções
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuItems = document.querySelectorAll('.menu-item');
+            const sections = document.querySelectorAll('.content-section');
+            const toggle = document.getElementById('theme-toggle');
+            const icon = toggle.querySelector('i');
 
-  <!-- ===== SEÇÃO SOCIAL ===== -->
-  <section class="social-section">
-    <div class="social-content">
-      <div class="social-text">
-        <p>Transforme sua gestão de estoque com nossa solução completa.</p>
-        <p>Conecte-se com nossos canais:</p>
-      </div>
+            menuItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    menuItems.forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+                    const target = item.getAttribute('data-target');
+                    sections.forEach(section => {
+                        section.classList.remove('active');
+                        if (section.id === target) section.classList.add('active');
+                    });
+                });
+            });
 
-      <div class="social-grid">
-        <a href="#" class="social-item">
-          <i class="fab fa-twitter social-icon"></i>
-          <span class="social-name">Twitter</span>
-        </a>
-        <a href="#" class="social-item">
-          <i class="fab fa-facebook-f social-icon"></i>
-          <span class="social-name">Facebook</span>
-        </a>
-        <a href="#" class="social-item">
-          <i class="fab fa-instagram social-icon"></i>
-          <span class="social-name">Instagram</span>
-        </a>
-        <a href="#" class="social-item">
-          <i class="fab fa-linkedin-in social-icon"></i>
-          <span class="social-name">LinkedIn</span>
-        </a>
-        <a href="#" class="social-item">
-          <i class="fab fa-youtube social-icon"></i>
-          <span class="social-name">YouTube</span>
-        </a>
-      </div>
-    </div>
-  </section>
+            // 🌙 Alternar modo escuro
+            const body = document.body;
+            if (localStorage.getItem('theme') === 'dark') {
+                body.classList.add('dark-mode');
+                icon.classList.replace('fa-moon', 'fa-sun');
+            }
 
-  <!-- ===== RODAPÉ ===== -->
-  <footer>
-    <div class="footer-container">
-      <div class="footer-brand">
-        <div class="footer-logo">SIG</div>
-        <p class="footer-description">Sistema Integrado de Gerenciamento de Estoque</p>
-      </div>
+            toggle.addEventListener('click', () => {
+                body.classList.toggle('dark-mode');
+                const dark = body.classList.contains('dark-mode');
+                icon.classList.toggle('fa-moon', !dark);
+                icon.classList.toggle('fa-sun', dark);
+                localStorage.setItem('theme', dark ? 'dark' : 'light');
+            });
+        });
+    </script>
 
-      <div>
-        <h4 class="footer-heading">Links Rápidos</h4>
-        <ul class="footer-links">
-          <li><a href="#"><i class="fas fa-chevron-right"></i> Contato</a></li>
-          <li><a href="#"><i class="fas fa-chevron-right"></i> Download</a></li>
-          <li><a href="#"><i class="fas fa-chevron-right"></i> Imprensa</a></li>
-        </ul>
-      </div>
-
-      <div>
-        <h4 class="footer-heading">Suporte</h4>
-        <ul class="footer-links">
-          <li><a href="#"><i class="fas fa-chevron-right"></i> E-mail</a></li>
-          <li><a href="#"><i class="fas fa-chevron-right"></i> Política de Privacidade</a></li>
-        </ul>
-      </div>
-
-      <div>
-        <h4 class="footer-heading">Contato</h4>
-        <ul class="footer-links">
-          <li><i class="fas fa-map-marker-alt"></i> São Paulo, Brasil</li>
-          <li><i class="fas fa-phone"></i> +55 11 98765-4321</li>
-          <li><i class="fas fa-envelope"></i> contato@sig.com.br</li>
-        </ul>
-      </div>
-
-      <div class="footer-bottom">
-        <p>&copy; <script>document.write(new Date().getFullYear())</script> SIG Sistema de Gerenciamento. Todos os direitos reservados.</p>
-      </div>
-    </div>
-  </footer>
 </body>
 </html>

@@ -1,99 +1,173 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIG - Sistema Integrado</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SIG - Sistema Integrado</title>
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2>SIG</h2>
+      <div class="user-info">
+        <!-- Nome de usuário e cargo (solicitação atendida) -->
+        <div class="user-name">{{ usuario_nome or "Administrador" }}</div>
+        <div class="user-role">{{ usuario_cargo or "Gerente" }}</div>
+      </div>
 
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <h2>SIG</h2>
-            <div class="user-info">
-                <div class="user-name">Carlos Silva</div>
-                <div class="user-role">Administrador</div>
-            </div>
+      <!-- Botão de modo escuro -->
+      <button class="theme-toggle" id="theme-toggle" title="Alternar tema">
+        <i class="fas fa-moon"></i>
+      </button>
+    </div>
+
+    <!-- Menu de Navegação -->
+    <nav class="nav-menu">
+      <a class="menu-item active" data-target="dashboard"><i class="fas fa-home"></i> Dashboard</a>
+      <a class="menu-item" data-target="clientes"><i class="fas fa-users"></i> Clientes</a>
+      <a class="menu-item" data-target="vendas"><i class="fas fa-chart-line"></i> Vendas</a>
+      <a class="menu-item" data-target="produtos"><i class="fas fa-box-open"></i> Produtos</a>
+      <a class="menu-item" data-target="config"><i class="fas fa-cog"></i> Configurações</a>
+    </nav>
+
+    <!-- Botão de Logout (Corrigido para aparecer no final da sidebar) -->
+    <button class="logout-btn" id="logout-btn" title="Sair">
+      <i class="fas fa-sign-out-alt"></i> Sair
+    </button>
+  </aside>
+
+  <!-- Conteúdo principal -->
+  <main class="main-content">
+    <div class="content-header">
+      <h1><i class="fas fa-tachometer-alt"></i> Painel Principal</h1>
+    </div>
+
+    <!-- DASHBOARD -->
+    <section id="dashboard" class="content-section active">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <i class="fas fa-users stat-icon"></i>
+          <span id="clienteCount" class="stat-number">{{ clientes|length }}</span>
+          <span class="stat-label">Clientes</span>
         </div>
-
-        <nav class="nav-menu">
-            <a class="menu-item active" data-target="dashboard">
-                <i class="fas fa-home"></i> Dashboard
-            </a>
-            <a class="menu-item" data-target="clientes">
-                <i class="fas fa-users"></i> Clientes
-            </a>
-            <a class="menu-item" data-target="vendas">
-                <i class="fas fa-chart-line"></i> Vendas
-            </a>
-            <a class="menu-item" data-target="produtos">
-                <i class="fas fa-box-open"></i> Produtos
-            </a>
-            <a class="menu-item" data-target="config">
-                <i class="fas fa-cog"></i> Configurações
-            </a>
-        </nav>
-    </aside>
-
-    <!-- Conteúdo Principal -->
-    <main class="main-content">
-        <!-- Cabeçalho -->
-        <div class="content-header">
-            <h1><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
+        <div class="stat-card">
+          <i class="fas fa-box stat-icon"></i>
+          <span id="produtoCount" class="stat-number">{{ produtos|length }}</span>
+          <span class="stat-label">Produtos</span>
         </div>
+        <div class="stat-card">
+          <i class="fas fa-dollar-sign stat-icon"></i>
+          <span id="vendaCount" class="stat-number">R$ 0</span>
+          <span class="stat-label">Vendas</span>
+        </div>
+      </div>
 
-        <!-- Seção de conteúdo -->
-        <section id="dashboard" class="content-section active">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <i class="fas fa-users stat-icon"></i>
-                    <span class="stat-number">120</span>
-                    <span class="stat-label">Clientes</span>
-                </div>
-                <div class="stat-card">
-                    <i class="fas fa-box stat-icon"></i>
-                    <span class="stat-number">85</span>
-                    <span class="stat-label">Produtos</span>
-                </div>
-                <div class="stat-card">
-                    <i class="fas fa-dollar-sign stat-icon"></i>
-                    <span class="stat-number">R$ 45k</span>
-                    <span class="stat-label">Vendas</span>
-                </div>
-            </div>
+      <!-- Gráfico de Vendas (últimos 6 meses) -->
+      <div class="card">
+        <h3><i class="fas fa-chart-line"></i> Gráfico de Vendas (últimos 6 meses)</h3>
+        <canvas id="salesChart" width="400" height="200"></canvas>
+      </div>
 
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title"><i class="fas fa-info-circle"></i> Informações do Sistema</h3>
-                </div>
-                <p>Bem-vindo ao <strong>Sistema Integrado de Gestão (SIG)</strong>. Use o menu lateral para navegar entre as seções.</p>
-            </div>
-        </section>
-    </main>
+      <!-- Gráfico de Crescimento de Clientes -->
+      <div class="card">
+        <h3><i class="fas fa-users"></i> Crescimento de Clientes</h3>
+        <canvas id="clientesChart" width="400" height="200"></canvas>
+      </div>
+      
+      <!-- Gráfico de Vendas por Canal -->
+      <div class="card">
+        <h3><i class="fas fa-chart-pie"></i> Vendas por Canal</h3>
+        <canvas id="vendasMensais" width="400" height="200"></canvas>
+      </div>
 
-    <script>
-        // Alternar seções de conteúdo
-        document.addEventListener('DOMContentLoaded', () => {
-            const menuItems = document.querySelectorAll('.menu-item');
-            const sections = document.querySelectorAll('.content-section');
+      <div id="alertas" class="alertas">
+        {% for alerta in alertas %}
+          <div class="alert">{{ alerta }}</div>
+        {% endfor %}
+      </div>
+    </section>
 
-            menuItems.forEach(item => {
-                item.addEventListener('click', () => {
-                    menuItems.forEach(i => i.classList.remove('active'));
-                    item.classList.add('active');
-                    const target = item.getAttribute('data-target');
+    <!-- CLIENTES -->
+    <section id="clientes" class="content-section">
+      <div class="card">
+        <h3><i class="fas fa-user-plus"></i> Adicionar Cliente</h3>
+        <!-- Formulário funcional para adicionar cliente -->
+        <form id="clienteForm" method="POST" action="{{ url_for('add_cliente') }}">
+          <input type="text" name="nome" placeholder="Nome" required>
+          <input type="email" name="email" placeholder="E-mail" required>
+          <input type="tel" name="telefone" placeholder="Telefone">
+          <button type="submit" class="btn">Adicionar</button>
+        </form>
 
-                    sections.forEach(section => {
-                        section.classList.remove('active');
-                        if (section.id === target) section.classList.add('active');
-                    });
-                });
-            });
-        });
-    </script>
+        <h3 style="margin-top:20px;"><i class="fas fa-users"></i> Lista de Clientes</h3>
+        <table class="data-table" id="clientesTable">
+          <thead>
+            <tr><th>Nome</th><th>Email</th><th>Telefone</th></tr>
+          </thead>
+          <tbody>
+            {% for c in clientes %}
+              <tr><td>{{ c.nome }}</td><td>{{ c.email }}</td><td>{{ c.telefone }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
 
+    <!-- PRODUTOS -->
+    <section id="produtos" class="content-section">
+      <div class="card">
+        <h3><i class="fas fa-plus"></i> Adicionar Produto</h3>
+        <!-- Formulário funcional para adicionar produto -->
+        <form id="produtoForm" method="POST" action="{{ url_for('add_produto') }}">
+          <input type="text" name="nome" placeholder="Nome do Produto" required>
+          <input type="number" name="estoque" placeholder="Quantidade" required>
+          <input type="number" step="0.01" name="preco" placeholder="Preço" required>
+          <input type="date" name="validade" placeholder="Validade">
+          <button type="submit" class="btn">Adicionar</button>
+        </form>
+
+        <h3 style="margin-top:20px;"><i class="fas fa-box"></i> Lista de Produtos</h3>
+        <table class="data-table" id="produtosTable">
+          <thead><tr><th>Produto</th><th>Preço</th><th>Estoque</th></tr></thead>
+          <tbody>
+            {% for p in produtos %}
+              <tr><td>{{ p.nome }}</td><td>R$ {{ "%.2f"|format(p.preco) }}</td><td>{{ p.estoque }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- VENDAS -->
+    <section id="vendas" class="content-section">
+      <div class="card">
+        <h3><i class="fas fa-chart-bar"></i> Relatório de Vendas</h3>
+        <canvas id="vendasMensais" width="400" height="200"></canvas>
+      </div>
+    </section>
+
+    <!-- CONFIGURAÇÕES -->
+    <section id="config" class="content-section">
+      <div class="card">
+        <h3><i class="fas fa-cog"></i> Configurações</h3>
+        <ul>
+          <li>🔔 Sistema de notificação para estoque baixo</li>
+          <li>📅 Alertas de validade de produtos</li>
+          <li>⚙️ Configuração de limites mínimos</li>
+          <li>✉️ Notificações por e-mail/dashboard</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <!-- Script principal -->
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </body>
 </html>
