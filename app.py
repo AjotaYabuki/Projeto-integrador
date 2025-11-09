@@ -11,7 +11,9 @@ import random
 # --------------------------
 load_dotenv()
 
-app = Flask(__name__)
+# Força o Flask a reconhecer a pasta 'static' corretamente
+import os
+app = Flask(__name__, static_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static'))
 CORS(app)
 app.config['SECRET_KEY'] = os.getenv("SECRET_KEY", "default_secret_key")
 
@@ -45,6 +47,7 @@ class Cliente(db.Model):
 class Produto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(120), nullable=False)
+    marca = db.Column(db.String(120), nullable=True) # NOVO CAMPO
     preco = db.Column(db.Float, nullable=False)
     estoque = db.Column(db.Integer, nullable=False, default=0)
     validade = db.Column(db.Date, nullable=True)
@@ -219,6 +222,7 @@ def add_produto():
         
     try:
         nome = request.form['nome']
+        marca = request.form.get('marca')
         preco = float(request.form['preco'])
         estoque = int(request.form['estoque'])
         validade = request.form.get('validade')
@@ -229,7 +233,7 @@ def add_produto():
             flash("Produto com este nome já existe.", "danger")
             return redirect(url_for('dashboard'))
             
-        novo = Produto(nome=nome, preco=preco, estoque=estoque, validade=validade_data)
+        novo = Produto(nome=nome, marca=marca, preco=preco, estoque=estoque, validade=validade_data)
         db.session.add(novo)
         db.session.commit()
         flash("Produto adicionado com sucesso!", "success")
@@ -285,6 +289,7 @@ if __name__ == "__main__":
             for i in range(5):
                 db.session.add(Produto(
                     nome=f"Produto {i+1}",
+                    marca=f"Marca {i+1}",
                     preco=random.uniform(10, 100),
                     estoque=random.randint(2, 20),
                     validade=datetime.now().date() + timedelta(days=random.randint(2, 30))

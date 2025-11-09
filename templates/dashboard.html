@@ -5,10 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SIG - Sistema Integrado</title>
 
-  <!-- Estilos -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- FontAwesome e Chart.js -->
+  <script src="https://kit.fontawesome.com/a2e0e6adf3.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v=6">
 </head>
 
 <body>
@@ -17,18 +19,16 @@
     <div class="sidebar-header">
       <h2>SIG</h2>
       <div class="user-info">
-        <!-- Nome de usuário e cargo (solicitação atendida) -->
         <div class="user-name">{{ usuario_nome or "Administrador" }}</div>
         <div class="user-role">{{ usuario_cargo or "Gerente" }}</div>
       </div>
 
-      <!-- Botão de modo escuro -->
       <button class="theme-toggle" id="theme-toggle" title="Alternar tema">
         <i class="fas fa-moon"></i>
       </button>
     </div>
 
-    <!-- Menu de Navegação -->
+    <!-- Menu -->
     <nav class="nav-menu">
       <a class="menu-item active" data-target="dashboard"><i class="fas fa-home"></i> Dashboard</a>
       <a class="menu-item" data-target="clientes"><i class="fas fa-users"></i> Clientes</a>
@@ -37,13 +37,13 @@
       <a class="menu-item" data-target="config"><i class="fas fa-cog"></i> Configurações</a>
     </nav>
 
-    <!-- Botão de Logout (Corrigido para aparecer no final da sidebar) -->
-    <button class="logout-btn" id="logout-btn" title="Sair">
+    <!-- Logout -->
+    <button class="logout-btn" id="logout-btn">
       <i class="fas fa-sign-out-alt"></i> Sair
     </button>
   </aside>
 
-  <!-- Conteúdo principal -->
+  <!-- Conteúdo -->
   <main class="main-content">
     <div class="content-header">
       <h1><i class="fas fa-tachometer-alt"></i> Painel Principal</h1>
@@ -54,43 +54,34 @@
       <div class="stats-grid">
         <div class="stat-card">
           <i class="fas fa-users stat-icon"></i>
-          <span id="clienteCount" class="stat-number">{{ clientes|length }}</span>
+          <span id="clienteCount" class="stat-number">25</span>
           <span class="stat-label">Clientes</span>
         </div>
         <div class="stat-card">
           <i class="fas fa-box stat-icon"></i>
-          <span id="produtoCount" class="stat-number">{{ produtos|length }}</span>
+          <span id="produtoCount" class="stat-number">15</span>
           <span class="stat-label">Produtos</span>
         </div>
         <div class="stat-card">
           <i class="fas fa-dollar-sign stat-icon"></i>
-          <span id="vendaCount" class="stat-number">R$ 0</span>
+          <span id="vendaCount" class="stat-number">R$ 12.500,00</span>
           <span class="stat-label">Vendas</span>
         </div>
       </div>
 
-      <!-- Gráfico de Vendas (últimos 6 meses) -->
       <div class="card">
-        <h3><i class="fas fa-chart-line"></i> Gráfico de Vendas (últimos 6 meses)</h3>
-        <canvas id="salesChart" width="400" height="200"></canvas>
+        <h3><i class="fas fa-chart-line"></i> Gráfico de Vendas (6 meses)</h3>
+        <canvas id="salesChart"></canvas>
       </div>
 
-      <!-- Gráfico de Crescimento de Clientes -->
       <div class="card">
         <h3><i class="fas fa-users"></i> Crescimento de Clientes</h3>
-        <canvas id="clientesChart" width="400" height="200"></canvas>
-      </div>
-      
-      <!-- Gráfico de Vendas por Canal -->
-      <div class="card">
-        <h3><i class="fas fa-chart-pie"></i> Vendas por Canal</h3>
-        <canvas id="vendasMensais" width="400" height="200"></canvas>
+        <canvas id="clientesChart"></canvas>
       </div>
 
-      <div id="alertas" class="alertas">
-        {% for alerta in alertas %}
-          <div class="alert">{{ alerta }}</div>
-        {% endfor %}
+      <div class="card">
+        <h3><i class="fas fa-chart-pie"></i> Vendas por Canal</h3>
+        <canvas id="vendasCanais"></canvas>
       </div>
     </section>
 
@@ -98,24 +89,17 @@
     <section id="clientes" class="content-section">
       <div class="card">
         <h3><i class="fas fa-user-plus"></i> Adicionar Cliente</h3>
-        <!-- Formulário funcional para adicionar cliente -->
-        <form id="clienteForm" method="POST" action="{{ url_for('add_cliente') }}">
+        <form id="clienteForm">
           <input type="text" name="nome" placeholder="Nome" required>
           <input type="email" name="email" placeholder="E-mail" required>
           <input type="tel" name="telefone" placeholder="Telefone">
           <button type="submit" class="btn">Adicionar</button>
         </form>
 
-        <h3 style="margin-top:20px;"><i class="fas fa-users"></i> Lista de Clientes</h3>
+        <h3><i class="fas fa-users"></i> Lista de Clientes</h3>
         <table class="data-table" id="clientesTable">
-          <thead>
-            <tr><th>Nome</th><th>Email</th><th>Telefone</th></tr>
-          </thead>
-          <tbody>
-            {% for c in clientes %}
-              <tr><td>{{ c.nome }}</td><td>{{ c.email }}</td><td>{{ c.telefone }}</td></tr>
-            {% endfor %}
-          </tbody>
+          <thead><tr><th>Nome</th><th>Email</th><th>Telefone</th></tr></thead>
+          <tbody></tbody>
         </table>
       </div>
     </section>
@@ -124,23 +108,18 @@
     <section id="produtos" class="content-section">
       <div class="card">
         <h3><i class="fas fa-plus"></i> Adicionar Produto</h3>
-        <!-- Formulário funcional para adicionar produto -->
-        <form id="produtoForm" method="POST" action="{{ url_for('add_produto') }}">
+        <form id="produtoForm">
           <input type="text" name="nome" placeholder="Nome do Produto" required>
-          <input type="number" name="estoque" placeholder="Quantidade" required>
+          <input type="text" name="marca" placeholder="Marca" required>
+          <input type="number" name="estoque" placeholder="Estoque" required>
           <input type="number" step="0.01" name="preco" placeholder="Preço" required>
-          <input type="date" name="validade" placeholder="Validade">
           <button type="submit" class="btn">Adicionar</button>
         </form>
 
-        <h3 style="margin-top:20px;"><i class="fas fa-box"></i> Lista de Produtos</h3>
+        <h3><i class="fas fa-box"></i> Lista de Produtos</h3>
         <table class="data-table" id="produtosTable">
-          <thead><tr><th>Produto</th><th>Preço</th><th>Estoque</th></tr></thead>
-          <tbody>
-            {% for p in produtos %}
-              <tr><td>{{ p.nome }}</td><td>R$ {{ "%.2f"|format(p.preco) }}</td><td>{{ p.estoque }}</td></tr>
-            {% endfor %}
-          </tbody>
+          <thead><tr><th>Produto</th><th>Marca</th><th>Preço</th><th>Estoque</th></tr></thead>
+          <tbody></tbody>
         </table>
       </div>
     </section>
@@ -149,25 +128,21 @@
     <section id="vendas" class="content-section">
       <div class="card">
         <h3><i class="fas fa-chart-bar"></i> Relatório de Vendas</h3>
-        <canvas id="vendasMensais" width="400" height="200"></canvas>
+        <canvas id="vendasMensais"></canvas>
       </div>
     </section>
 
-    <!-- CONFIGURAÇÕES -->
+    <!-- CONFIG -->
     <section id="config" class="content-section">
       <div class="card">
         <h3><i class="fas fa-cog"></i> Configurações</h3>
-        <ul>
-          <li>🔔 Sistema de notificação para estoque baixo</li>
-          <li>📅 Alertas de validade de produtos</li>
-          <li>⚙️ Configuração de limites mínimos</li>
-          <li>✉️ Notificações por e-mail/dashboard</li>
-        </ul>
+        <p>🔔 Alertas de estoque baixo</p>
+        <p>📅 Validade de produtos</p>
       </div>
     </section>
   </main>
 
-  <!-- Script principal -->
-  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+  <!-- JS -->
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}?v=6" defer></script>
 </body>
 </html>
